@@ -11,11 +11,13 @@ func main() {
 	lines, err := readLines("input.txt")
 	assert(err)
 
-	for i, lhs := range lines {
-		for _, rhs := range lines[i+1:] {
-			if lhs+rhs == 2020 {
-				fmt.Println("answer: ", lhs*rhs)
-				return
+	for i, first := range lines {
+		for j, second := range lines[i+1:] {
+			for _, third := range lines[j+1:] {
+				if first+second+third == 2020 {
+					fmt.Println("answer: ", first*second*third)
+					return
+				}
 			}
 		}
 	}
