@@ -49,24 +49,10 @@ func readLines(fileName string) ([]string, error) {
 	return lines, err
 }
 
-func convertoToIntArray(lines []string) ([]int, error) {
-	values := []int{}
-
-	for _, line := range lines {
-		v, err := strconv.Atoi(line)
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, v)
-	}
-
-	return values, nil
-}
-
 type policy struct {
-	min    int
-	max    int
-	letter rune
+	firstPos  int
+	secondPos int
+	letter    rune
 }
 
 type policyAndPassword struct {
@@ -78,31 +64,27 @@ func createPolicyAndPassword(line string) (*policyAndPassword, error) {
 	re := regexp.MustCompile("(\\d+)-(\\d+)\\s(\\w):\\s(\\w+)")
 	parts := re.FindStringSubmatch(line)
 
-	min, err := strconv.Atoi(parts[1])
+	firstPos, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return nil, err
 	}
 
-	max, err := strconv.Atoi(parts[2])
+	secondPos, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return nil, err
 	}
 
 	res := new(policyAndPassword)
-	res.policy.min = min
-	res.policy.max = max
+	res.policy.firstPos = firstPos - 1
+	res.policy.secondPos = secondPos - 1
 	res.policy.letter = []rune(parts[3])[0]
 	res.password = parts[4]
 	return res, nil
 }
 
 func (ptr *policyAndPassword) isValid() bool {
-	count := 0
-	for _, l := range ptr.password {
-		if l == ptr.policy.letter {
-			count++
-		}
-	}
-
-	return count >= ptr.policy.min && count <= ptr.policy.max
+	runes := []rune(ptr.password)
+	letterInFirstPos := runes[ptr.policy.firstPos] == ptr.policy.letter
+	letterInSecondPos := runes[ptr.policy.secondPos] == ptr.policy.letter
+	return letterInFirstPos != letterInSecondPos
 }
