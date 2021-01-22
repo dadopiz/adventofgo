@@ -1,90 +1,53 @@
 package main
 
 import (
-	"bufio"
+	"adventofgo/utils"
 	"fmt"
-	"os"
-	"regexp"
-	"strconv"
 )
 
+const (
+	tree  = '#'
+	right = 3
+	down  = 1
+)
+
+type point struct {
+	x int
+	y int
+}
+
+func (p *point) nextStep(size point) {
+	p.x += right
+	p.y += down
+	if p.x >= size.x {
+		p.x = p.x - size.x
+	}
+}
+
+func sizeOfTreeMap(treeMap []string) point {
+	return point{
+		x: len(treeMap[0]),
+		y: len(treeMap),
+	}
+}
+
+func foundTree(treeMap []string, p point) bool {
+	return []rune(treeMap[p.y])[p.x] == tree
+}
+
 func main() {
-	lines, err := readLines("input.txt")
-	assert(err)
+	treeMap, err := utils.ReadLines("input.txt")
+	utils.Assert(err)
 
-	count := 0
-	for _, line := range lines {
-		res, err := createPolicyAndPassword(line)
-		assert(err)
-
-		if res.isValid() {
-			count++
+	size := sizeOfTreeMap(treeMap)
+	position := point{}
+	treeCount := 0
+	for position.y < size.y {
+		if foundTree(treeMap, position) {
+			treeCount++
 		}
+		position.nextStep(size)
 	}
 
-	fmt.Println("Valid passwords: ", count)
-}
-
-func assert(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func readLines(fileName string) ([]string, error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	lines := []string{}
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	err = scanner.Err()
-
-	return lines, err
-}
-
-type policy struct {
-	firstPos  int
-	secondPos int
-	letter    rune
-}
-
-type policyAndPassword struct {
-	policy   policy
-	password string
-}
-
-func createPolicyAndPassword(line string) (*policyAndPassword, error) {
-	re := regexp.MustCompile("(\\d+)-(\\d+)\\s(\\w):\\s(\\w+)")
-	parts := re.FindStringSubmatch(line)
-
-	firstPos, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return nil, err
-	}
-
-	secondPos, err := strconv.Atoi(parts[2])
-	if err != nil {
-		return nil, err
-	}
-
-	res := new(policyAndPassword)
-	res.policy.firstPos = firstPos - 1
-	res.policy.secondPos = secondPos - 1
-	res.policy.letter = []rune(parts[3])[0]
-	res.password = parts[4]
-	return res, nil
-}
-
-func (ptr *policyAndPassword) isValid() bool {
-	runes := []rune(ptr.password)
-	letterInFirstPos := runes[ptr.policy.firstPos] == ptr.policy.letter
-	letterInSecondPos := runes[ptr.policy.secondPos] == ptr.policy.letter
-	return letterInFirstPos != letterInSecondPos
+	fmt.Println("trees: ", treeCount)
 }
