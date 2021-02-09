@@ -42,14 +42,14 @@ func main() {
 
 func requiredFields(data string) bool {
 	fields := []string{
-		"byr",
-		"iyr",
-		"eyr",
-		"hgt",
-		"hcl",
-		"ecl",
-		"pid",
-		//"cid",
+		"byr:",
+		"iyr:",
+		"eyr:",
+		"hgt:",
+		"hcl:",
+		"ecl:",
+		"pid:",
+		//"cid:",
 	}
 
 	for _, field := range fields {
@@ -95,8 +95,9 @@ func iyrRule(data string) bool {
 }
 
 func pidRule(data string) bool {
-	re := regexp.MustCompile("pid:\\d{9}")
-	return len(re.FindString(data)) > 0
+	re := regexp.MustCompile("pid:(\\d+)")
+	values := re.FindStringSubmatch(data)
+	return len(values) > 1 && len(values[1]) == 9
 }
 
 func eclRule(data string) bool {
@@ -135,7 +136,7 @@ func hgtRule(data string) bool {
 }
 
 func hclRule(data string) bool {
-	re := regexp.MustCompile("hcl:(#[0-9 a-f]{6})")
+	re := regexp.MustCompile("hcl:#[0-9a-f]{6}")
 	return len(re.FindString(data)) > 0
 }
 
