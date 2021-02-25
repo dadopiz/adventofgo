@@ -3,150 +3,59 @@ package main
 import (
 	"adventofgo/utils"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
+)
+
+const (
+	rows    int  = 128
+	columns int  = 8
+	front   rune = 'F'
+	back    rune = 'B'
+	right   rune = 'R'
+	left    rune = 'L'
 )
 
 func main() {
 	lines, err := utils.ReadLines("input.txt")
 	utils.Assert(err)
 
-	datas := []string{}
-	data := ""
+	maxSeatID := 0
 	for _, line := range lines {
-		if line == "" {
-			datas = append(datas, data)
-			data = ""
-		} else {
-			data = data + " " + line
-		}
-	}
-	datas = append(datas, data)
-
-	passports := []string{}
-	for _, data := range datas {
-		if requiredFields(data) {
-			passports = append(passports, data)
+		row, column := seat(line)
+		seatID := seatID(row, column)
+		if seatID > maxSeatID {
+			maxSeatID = seatID
 		}
 	}
 
-	count := 0
-	for _, passport := range passports {
-		if checkRules(passport) {
-			count++
-		}
-	}
-	fmt.Println("count: ", count)
+	fmt.Println("seatID=", maxSeatID)
 }
 
-func requiredFields(data string) bool {
-	fields := []string{
-		"byr:",
-		"iyr:",
-		"eyr:",
-		"hgt:",
-		"hcl:",
-		"ecl:",
-		"pid:",
-		//"cid:",
-	}
-
-	for _, field := range fields {
-		if !strings.Contains(data, field) {
-			return false
-		}
-	}
-
-	return true
+func upperHalf(min int, max int) int {
+	return (min + max) / 2
 }
 
-func checkRules(data string) bool {
-	rules := []func(string) bool{
-		byrRule,
-		iyrRule,
-		eyrRule,
-		hgtRule,
-		hclRule,
-		eclRule,
-		pidRule,
-	}
+func lowerHalf(min int, max int) int {
+	return (min + 1 + max) / 2
+}
 
-	for _, rule := range rules {
-		if !rule(data) {
-			return false
+func seatID(row int, column int) int {
+	return row*columns + column
+}
+
+func seat(line string) (int, int) {
+	row := [2]int{0, rows - 1}
+	column := [2]int{0, columns - 1}
+	for _, c := range line {
+		if c == front {
+			row[1] = upperHalf(row[0], row[1])
+		} else if c == back {
+			row[0] = lowerHalf(row[0], row[1])
+		} else if c == right {
+			column[0] = lowerHalf(column[0], column[1])
+		} else if c == left {
+			column[1] = upperHalf(column[0], column[1])
 		}
 	}
 
-	fmt.Println(data)
-	return true
-}
-
-func eyrRule(data string) bool {
-	return yearCheck("eyr", 2020, 2030, data)
-}
-
-func byrRule(data string) bool {
-	return yearCheck("byr", 1920, 2002, data)
-}
-
-func iyrRule(data string) bool {
-	return yearCheck("iyr", 2010, 2020, data)
-}
-
-func pidRule(data string) bool {
-	re := regexp.MustCompile("pid:(\\d+)")
-	values := re.FindStringSubmatch(data)
-	return len(values) > 1 && len(values[1]) == 9
-}
-
-func eclRule(data string) bool {
-	re := regexp.MustCompile("ecl:(\\D{3})")
-	values := re.FindStringSubmatch(data)
-	if len(values) != 2 {
-		return false
-	}
-
-	tokens := []string{"amb", "blu", "brn", "gry", "grn", "hzl", "oth"}
-	for _, t := range tokens {
-		if values[1] == t {
-			return true
-		}
-	}
-
-	return false
-}
-
-func hgtRule(data string) bool {
-	re := regexp.MustCompile("hgt:(\\d{3})cm")
-	values := re.FindStringSubmatch(data)
-	if len(values) == 2 {
-		value, _ := strconv.Atoi(values[1])
-		return value >= 150 && value <= 193
-	}
-
-	re = regexp.MustCompile("hgt:(\\d{2})in")
-	values = re.FindStringSubmatch(data)
-	if len(values) == 2 {
-		value, _ := strconv.Atoi(values[1])
-		return value >= 59 && value <= 76
-	}
-
-	return false
-}
-
-func hclRule(data string) bool {
-	re := regexp.MustCompile("hcl:#[0-9a-f]{6}")
-	return len(re.FindString(data)) > 0
-}
-
-func yearCheck(field string, min int, max int, data string) bool {
-	re := regexp.MustCompile(field + ":(\\d{4})")
-	values := re.FindStringSubmatch(data)
-	if len(values) != 2 {
-		return false
-	}
-
-	year, _ := strconv.Atoi(values[1])
-	return year >= min && year <= max
+	return row[0], column[0]
 }
