@@ -13,41 +13,49 @@ func main() {
 
 	res := 0
 	for _, g := range groups {
-		g = unique(g)
-		res += len(g)
+		res += count(g)
 	}
 
 	fmt.Println("result:", res)
 }
 
-func getGroups(lines []string) []string {
-	groups := []string{}
-	group := ""
+type group = []string
+
+func getGroups(lines []string) []group {
+	groups := []group{}
+	g := group{}
 
 	for _, line := range lines {
 		if line == "" {
-			groups = append(groups, group)
-			group = line
+			groups = append(groups, g)
+			g = nil
 		} else {
-			group += line
+			g = append(g, line)
 		}
 	}
 
-	if group != "" {
-		groups = append(groups, group)
+	if g != nil {
+		groups = append(groups, g)
 	}
 
 	return groups
 }
 
-func unique(group string) string {
-	keys := map[rune]bool{}
+func count(g group) int {
+	keys := map[rune]int{}
 
-	res := ""
-	for _, r := range group {
-		if _, value := keys[r]; !value {
-			keys[r] = true
-			res += string(r)
+	for _, p := range g {
+		for _, r := range p {
+			keys[r]++
+		}
+	}
+
+	people := len(g)
+	res := 0
+
+	for _, v := range keys {
+		if v == people {
+			res++
 		}
 	}
 
